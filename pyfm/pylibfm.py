@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 import random
-from sklearn.metrics import log_loss, accuracy_score
 from pyfm_fast import FM_fast, CSRDataset
 
 LEARNING_RATE_TYPES = {"optimal": 0, "invscaling": 1, "constant": 2}
@@ -188,30 +187,27 @@ class FM:
         np.random.seed(seed=self.seed)
         self.v = np.random.normal(scale=self.init_stdev,size=(self.num_factors, self.num_attribute))
 
-        # Calculate log loss and accuracy for each iteration
-        log_losses = []
-        accuracies = []
+        self.fm_fast = FM_fast(self.w,
+                               self.v,
+                               self.num_factors,
+                               self.num_attribute,
+                               self.num_iter,
+                               k0,
+                               k1,
+                               self.w0,
+                               self.t,
+                               self.t0,
+                               self.power_t,
+                               self.min_target,
+                               self.max_target,
+                               self.eta0,
+                               learning_rate_schedule,
+                               shuffle_training,
+                               task,
+                               self.seed,
+                               verbose)
 
-        for epoch in range(self.num_iter):
-            # Calculate log loss and accuracy for each iteration
-            train_predictions = self.predict(X_train)
-            val_predictions = self.predict(validation)
-
-            train_log_loss = log_loss(train_labels, train_predictions)
-            val_log_loss = log_loss(validation_labels, val_predictions)
-
-            train_accuracy = accuracy_score(train_labels, np.sign(train_predictions))
-            val_accuracy = accuracy_score(validation_labels, np.sign(val_predictions))
-
-            log_losses.append((train_log_loss, val_log_loss))
-            accuracies.append((train_accuracy, val_accuracy))
-
-            if self.verbose == True:
-                print(f"-- Epoch {epoch + 1}")
-                print(f"Train Log Loss: {train_log_loss:.5f}, Validation Log Loss: {val_log_loss:.5f}")
-                print(f"Train Accuracy: {train_accuracy:.5f}, Validation Accuracy: {val_accuracy:.5f}")
-
-        return self.fm_fast.fit(X_train_dataset, validation_dataset), log_losses, accuracies
+        return self.fm_fast.fit(X_train_dataset, validation_dataset)
 
         # report epoch information
         if self.verbose == True:
